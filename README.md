@@ -5,9 +5,11 @@
 
 ### Signature:
 ```python
-make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=None,
-                        padding_mode="zeros", dilation=1, bias=True, 
-                        activation=nn.ReLU, pool_type="max", norm_type=None, module_list=False):
+make_convolutions(
+		   in_shape, out_shape, n_layers, kernel_size=None, stride=None,
+                   padding_mode="zeros", dilation=1, bias=True, 
+                   activation=nn.ReLU, pool_type="max", norm_type=None, module_list=False
+		  ) -> torch.nn.Sequential or torch.nn.ModuleList
 ```
 
 ### Args:
@@ -54,7 +56,7 @@ or torch.nn.ModuleList.
 
 ### Returns
 
-A system of (n_layers \*) convolutional, activation, pooling and (optionally) norm layers 
+A system of (n_layers of) convolutional, activation, pooling and (optionally) norm layers 
 taking an input of shape (batch_size, \*in_shape) and returning a result of shape (batch_size, \*out_shape).
 These layers are contained in a torch.nn.Sequential object or a torch.nn.ModuleList if specified by the
 `module_list` argument.
