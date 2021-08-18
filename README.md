@@ -75,3 +75,10 @@ here so I can get them squashed.
 
 *Also check out my other baby, QutiePy - a python quantum computing library.*
 
+## TODO:
+
+- Make proper docs & docstrings.
+- Test, test, test
+- Automate testing
+- Add more norm layer type
+
