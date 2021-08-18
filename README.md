@@ -1,11 +1,17 @@
 # pytorch-convo
  A package to automatically set up simple convolutional neural networks in pytorch.
  
-## `make_convolutions()`
+## `convo.make_convolutions()`
+
+This is the only function exported by this one-module package, intended to make designing 'quick and dirty'
+convolutional sub-networks easy and quick!
+
+Give it the shapes and activations you want, it'll give you a network taking your `in_shape` to your `out_shape`
+in `n_layers` steps.
 
 ### Signature:
 ```python
-make_convolutions(
+convo.make_convolutions(
 		   in_shape, out_shape, n_layers, kernel_size=None, stride=None,
                    padding_mode="zeros", dilation=1, bias=True, 
                    activation=nn.ReLU, pool_type="max", norm_type=None, module_list=False
