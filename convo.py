@@ -25,18 +25,64 @@ class _LastUpdatedOrderedDict(OrderedDict):
 def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=None,
                         padding_mode="zeros", dilation=1, bias=True, 
                         activation=nn.ReLU, pool_type="max", norm_type=None, module_list=False):
-    """
-    kwargs
-    ========
-    pool_type : "max" or "avg", default "max"
-    norm_type : None, "batch"
-    kernel_size : int or iter length n_layers
-    stride : ""
-    padding : ""
-    padding_mode : 'zeros', 'reflect', 'replicate' or 'circular'. Default: 'zeros'
-    dilation : int or iter length n_layers
-    bias : bool
-    activation: nn.Module or None
+    """Return a convolutional subnetwork configured according to the given args.
+
+    Parameters
+    ----------
+    
+    in_shape : tuple of ints
+        The shape of the input to the convolutional system. (C, X, [Y], [Z]).
+
+    out_shape : tuple of ints 
+        With the same shape as in_shape, specifying the desired output shape. 
+
+    n_layers : int
+        The number of convolutional layers in the system.
+
+    kernel_size : None, int, tuple of int (one int per layer) or tuple of tuples of int (shape [n_layers, n_spatial_dims], one int per dimension per layer), Default None
+        The kernel size for each convolutional filter. See PyTorch docs for more detail. None means the solver will find an appropriate value itself.
+ 
+    stride : None, int, tuple of int (one int per layer) or tuple of tuples of int (shape [n_layers, n_spatial_dims], one int per dimension per layer), Default None
+        The stride of each convolutional filter. See PyTorch docs for more detail. None means the solver will find an appropriate value itself.
+ 
+    padding_mode: one of 'zeros', 'reflect', 'replicate' or 'circular', Default 'zeros'.
+        The type of padding used where neccessary. See PyTorch docs for more detail.
+	
+    dilation: int, tuple of int (one int per layer) or tuple of tuples of int (shape [n_layers, n_spatial_dims], one int per dimension per layer), Default 1
+        The dilation for each convolutional filter. See PyTorch docs for more detail. None means the solver will find an appropriate value itself.
+ 
+    bias: Bool or array of Bool length n_layers, Default: True
+        Whether the convolutional layers will use a bias tensor or not.
+
+    activation: None or class inheriting torch.nn.Module, Default None
+        One instance of this type will be added after each convolutional layer. n.b. this needs to be a class object, NOT an instance that class.
+
+    pool_type: 'max', 'avg' or array of both length n_layers, Default 'max'
+        Indicates whether MaxPool or AvgPool layers will be used.
+
+    norm_type: None or 'batch' or array of both, Default None
+        Indicates whether BatchNorm layers will be added after  each pooling layer. In the future other norm types will be implemented.
+
+    module_list: Bool, Default False
+        Whether the returned object will be an instance of torch.nn.Sequential or torch.nn.ModuleList.
+
+    Returns
+    -------
+    torch.nn.Sequential or torch.nn.ModuleList
+        The resulting convolutional subnetwork in the specified container.
+        
+
+    Raises
+    ------
+    RuntimeError
+        If the parameter solver fails, try different constraints.
+        
+    TypeError
+        If certain arguments are given as incompatible types.
+        
+    ValueError
+        If the value of certain arguments are not in the correct range or shape.
+
     """
 
     _check_shapes(in_shape, out_shape)
@@ -79,8 +125,6 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
     pool_padding = zeros((n_layers, n_dims))
     pool_kernel_size = zeros((n_layers, n_dims))
     pool_stride = zeros((n_layers, n_dims))
-    
-    ### TBD change np arrays to Tensors
 
     for n in range(n_layers):
         for dim in range(n_dims):
@@ -135,12 +179,14 @@ def _get_conv_args(in_channels, out_channels, kernel, stride, padding, dilation,
             })
 
 def _none_to_neg_1(x):
+    """ Swaps None to -1 for torch tensor compatibility. """
     if x is None:
         return -1
     else:
         return x
          
 def _parse_dim_arg(arg, arg_name, n_dims):
+    """ Parses args that can be per-dimension. """
     try:
         [iter(x) for x in arg]
     except TypeError:
@@ -152,6 +198,7 @@ def _parse_dim_arg(arg, arg_name, n_dims):
         raise TypeError(f"{arg_name} must be single value or iterable of length n_layers or array of shape (n_layers, n_dims), got {type(arg)}.") 
         
 def _parse_seq_arg(arg, arg_name, n_layers):
+    """ Parses args that can be per-layer. """
     if type(arg) == str:
         return [arg] * n_layers
         
@@ -166,6 +213,7 @@ def _parse_seq_arg(arg, arg_name, n_layers):
         raise TypeError(f"{arg_name} must be single value or iterable of length n_layers, got: {type(arg)}.") 
 
 def _stripe_search_indices(n_params, n_stripe):
+    """ Yields tuples of n_params ints which sum to n_stripe. """
     if n_params == 1:
         yield (n_stripe,)
         return
@@ -175,6 +223,7 @@ def _stripe_search_indices(n_params, n_stripe):
             yield (i,) + t
 
 def _double_stripe_indices(n_params, n_stripe):
+    """ Encapsulates two _stripe_search_indices generators in parallel, calling next on one then the other."""
     g1 = _stripe_search_indices(ceil(n_params//2), n_stripe)
     g2 = _stripe_search_indices(floor(n_params//2), n_stripe)
     
@@ -191,6 +240,10 @@ def _double_stripe_indices(n_params, n_stripe):
             return
   
 def _get_layer_params(in_size, out_size, dilation, ks, st):
+    """ 
+    Solves for the params of a conv-pool layer pair given the in and out sizes 
+    of a given dim and use specified kernel and stride values. 
+    """
     stride_low_bound = 1
     
     if in_size > 128:
@@ -233,9 +286,11 @@ def _get_layer_params(in_size, out_size, dilation, ks, st):
     raise RuntimeError("Was not able to find suitable parameters for given inputs!")
     
 def _get_conv_layer_type(n_dims):
+    """ Returns the type of an n_dims-dimensioinal convolution layer. """
     return (nn.Conv1d, nn.Conv2d, nn.Conv3d)[n_dims - 1]
     
 def _get_pool_layer_type(pool_type, n_dims):
+    """ Returns the type of an n_dims-dimensioinal pooling layer of the specified type. """
     if pool_type is None:
         return None
     elif pool_type.lower() == "max":
@@ -246,6 +301,7 @@ def _get_pool_layer_type(pool_type, n_dims):
         raise ValueError(f"Got pooling layer type '{pool_type}' not 'max' or 'avg'.")
     
 def _get_norm_layer_type(norm_type, n_dims):
+    """ Returns the type of an n_dims-dimensioinal norm layer of the specified type. """
     if norm_type is None:
         return None
     elif norm_type.lower() == "batch":
@@ -254,8 +310,12 @@ def _get_norm_layer_type(norm_type, n_dims):
         raise ValueError(f"Got pooling layer type '{pool_type}' not 'max' 'avg' or None.")
     
 def _get_dim_sizes(in_size, out_size, n_layers):
+    """ 
+    Return an approximately geometric series of n_layers+1 ints,
+    starting with in_size and ending with out_size.
+    """
+
     # in * fac ** n = out,   log out/in = n log fac
-    
     # OPTIMIZE ME
     dim_factor = exp(log(out_size / in_size) / n_layers)
     dim_sizes = [int(in_size * (dim_factor ** n)) for n in range(0, n_layers+1)]
@@ -263,6 +323,7 @@ def _get_dim_sizes(in_size, out_size, n_layers):
     
     
 def _check_shapes(in_shape, out_shape):
+    """ Check that valid shapes have been supplied by the caller. """
     try:
         iter(in_shape)
         iter(out_shape)
@@ -280,10 +341,12 @@ def _check_shapes(in_shape, out_shape):
     return True
 
 def _conv_size_fcn(inp, padding, dilation, kernel, stride):
+    """ Return the output size or a conv layer with the given params. """
     numerator = inp + (2*padding) - (dilation*(kernel-1)) - 1
     return int((numerator/stride) + 1)
     
 def _pool_size_fcn(inp, padding, kernel, stride):
+    """ Return the output size or a pool layer with the given params. """
     numerator = inp + (2*padding) - kernel
     return int((numerator/stride) + 1)
     
