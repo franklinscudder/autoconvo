@@ -9,6 +9,8 @@ convolutional sub-networks easy and quick!
 Give it the shapes and activations you want, it'll give you a network taking your `in_shape` to your `out_shape`
 in `n_layers` steps.
 
+The solver is currently a little rigid, and may fail for larger input sizes and numbers of layers.
+
 ### Signature:
 ```python
 convo.make_convolutions(
@@ -78,7 +80,8 @@ here so I can get them squashed.
 ## TODO:
 
 - Make proper docs & docstrings.
-- Test, test, test
-- Automate testing
-- Add more norm layer type
+- Test, test, test...
+- Automate testing.
+- Add more norm layer type.
+- Add flexible solver by changing intermediate layer sizes.
 

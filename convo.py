@@ -216,8 +216,15 @@ def _get_layer_params(in_size, out_size, dilation, ks, st):
                 
             if pool_padding > pool_kernel // 2:
                 continue
+                
+            if in_size + (conv_padding * 2) > conv_kernel:
+                continue
             
             inter_size = _conv_size_fcn(in_size, conv_padding, dilation, conv_kernel + kernel_low_bound, conv_stride + stride_low_bound)
+            
+            if inter_size + (pool_padding * 2) > pool_kernel:
+                continue
+            
             candidate_out_size = _pool_size_fcn(inter_size, pool_padding, pool_kernel + kernel_low_bound, pool_stride + stride_low_bound)
             
             if candidate_out_size == out_size:
