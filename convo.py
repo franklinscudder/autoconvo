@@ -23,7 +23,7 @@ class _LastUpdatedOrderedDict(OrderedDict):
         
 
 def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=None,
-                        padding_mode="zeros", dilation=0, bias=True, 
+                        padding_mode="zeros", dilation=1, bias=True, 
                         activation=nn.ReLU, pool_type="max", norm_type=None, module_list=False):
     """
     kwargs
@@ -122,10 +122,10 @@ def _get_norm_args(in_channels):
     return (in_channels,), {}
 
 def _get_pool_args(kernel, stride, padding):
-    return ((kernel,) ,
+    return (([int(k) for k in kernel],) ,
             {
-            "stride" : stride,
-            "padding" : padding
+            "stride" : [int(s) for s in stride],
+            "padding" : [int(p) for p in padding]
             })
     
 def _get_conv_args(in_channels, out_channels, kernel, stride, padding, dilation, bias, padding_mode):
@@ -200,6 +200,9 @@ def _get_layer_params(in_size, out_size, dilation, ks, st):
                 continue
             
             if pool_stride > pool_kernel + kernel_low_bound:
+                continue
+                
+            if pool_padding > pool_kernel // 2:
                 continue
             
             inter_size = _conv_size_fcn(in_size, conv_padding, dilation, conv_kernel + kernel_low_bound, conv_stride + stride_low_bound)
