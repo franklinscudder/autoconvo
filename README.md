@@ -106,7 +106,7 @@ class MyCNN(nn.Module):
 
 ## TODO:
 
-- Make proper docs & docstrings.
+- Make proper docs.
 - Test, test, test...
 - Automate testing.
 - Add more norm layer type.
