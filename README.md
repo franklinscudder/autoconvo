@@ -60,7 +60,7 @@ each pooling layer. In the future other norm types will be implemented.
 - `module_list`: Bool. Whether the returned object will be an instance of `torch.nn.Sequential`
 or `torch.nn.ModuleList`.
 
-### Returns
+### Returns:
 
 A system of (`n_layers` of) convolutional, activation, pooling and (optionally) norm layers 
 taking an input of shape `(batch_size, *in_shape)` and returning a result of shape `(batch_size, *out_shape)`.
