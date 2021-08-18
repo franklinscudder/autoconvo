@@ -1,7 +1,7 @@
 # pytorch-convo
  A package to automatically set up simple convolutional neural networks in pytorch.
  
-## ```make_convolutions()```
+## `make_convolutions()`
 
 ### Signature:
 ```python
@@ -15,7 +15,7 @@ make_convolutions(
 ### Args:
 
 - `in_shape`: A tuple of ints specifying the shape of the input to the convolutional
-system. (C, X, \[Y], \[Z])
+system. `(C, X, [Y], [Z])`
 
 - `out_shape`: A tuple with the same shape as in_shape, specifying the desired
 output shape. 
@@ -51,14 +51,14 @@ that class (`activation=nn.ReLU` and not `activation=nn.ReLU()`).
 - `norm_type`: None or 'batch'. Default None. Indicates whether BatchNorm layers will be added after
 each pooling layer. In the future other norm types will be implemented.
 
-- `module_list`: Bool. Whether the returned object will be an instance of torch.nn.Sequential
-or torch.nn.ModuleList.
+- `module_list`: Bool. Whether the returned object will be an instance of `torch.nn.Sequential`
+or `torch.nn.ModuleList`.
 
 ### Returns
 
-A system of (n_layers of) convolutional, activation, pooling and (optionally) norm layers 
-taking an input of shape (batch_size, \*in_shape) and returning a result of shape (batch_size, \*out_shape).
-These layers are contained in a torch.nn.Sequential object or a torch.nn.ModuleList if specified by the
+A system of (`n_layers` of) convolutional, activation, pooling and (optionally) norm layers 
+taking an input of shape `(batch_size, *in_shape)` and returning a result of shape `(batch_size, *out_shape)`.
+These layers are contained in a `torch.nn.Sequential` object or a `torch.nn.ModuleList` if specified by the
 `module_list` argument.
 
 
