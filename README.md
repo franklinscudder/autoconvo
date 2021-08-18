@@ -77,6 +77,32 @@ here so I can get them squashed.
 
 *Also check out my other baby, QutiePy - a python quantum computing library.*
 
+### Example
+
+Below is an example of how to use `make_convolutions` to automate convolution parameter calculations and
+keep network definitions tidy. Remember, if you want to check the parameters `make_convolutions` has suggested,
+just `print` the resulting `nn.Sequential` or `nn.ModuleList` for a nice representation of the subnetwork in the console.
+
+```python
+import torch.nn as nn
+from torch import flatten
+
+class MyCNN(nn.Module):
+	def __init__(self):
+		super(MyCNN, self).__init__()
+		self.conv_subnet = make_convolutions([3, 256, 256], [100, 1, 1], 3)
+		## Uncomment the following to inspect the subnet params:
+		# print(self.conv_subnet)
+		self.flatten = nn.Flatten()
+		self.full_conn = nn.Linear(100, 1)
+		self.activation = nn.Sigmoid()
+	
+	def forward(self, batch):
+		# batch has shape [BATCH_SIZE, 3, 256, 256]
+		flat = self.flattten(self.conv_subnet(batch))
+		output = self.activation(self.full_conn(flat))
+```
+
 ## TODO:
 
 - Make proper docs & docstrings.
