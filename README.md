@@ -73,5 +73,5 @@ Currently, convo is in early testing and has not been released on PyPI. However,
 and add it to your project directory to import from locally. You will find bugs so please make PRs or post issues
 here so I can get them squashed.
 
-*also check out my other baby, QutiePy - a python quantum computing library.*
+*Also check out my other baby, QutiePy - a python quantum computing library.*
 
