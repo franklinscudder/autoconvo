@@ -86,11 +86,12 @@ just `print` the resulting `nn.Sequential` or `nn.ModuleList` for a nice represe
 ```python
 import torch.nn as nn
 from torch import flatten
+import convo
 
 class MyCNN(nn.Module):
 	def __init__(self):
 		super(MyCNN, self).__init__()
-		self.conv_subnet = make_convolutions([3, 256, 256], [100, 1, 1], 3)
+		self.conv_subnet = convo.make_convolutions([3, 256, 256], [100, 1, 1], 3)
 		## Uncomment the following to inspect the subnet params:
 		# print(self.conv_subnet)
 		self.flatten = nn.Flatten()
