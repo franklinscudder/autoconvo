@@ -67,5 +67,11 @@ taking an input of shape `(batch_size, *in_shape)` and returning a result of sha
 These layers are contained in a `torch.nn.Sequential` object or a `torch.nn.ModuleList` if specified by the
 `module_list` argument.
 
+## Using convo
 
+Currently, convo is in early testing and has not been released on PyPI. However, feel free to download convo.py
+and add it to your project directory to import from locally. You will find bugs so please make PRs or post issues
+here so I can get them squashed.
+
+*also check out my other baby, QutiePy - a python quantum computing library.*
 
