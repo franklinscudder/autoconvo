@@ -48,7 +48,7 @@ output shape.
  convolutional filter. See PyTorch docs for more detail. None means the solver will
  find an appropriate value itself.
  
-- `bias`: Bool. Whether the convolutional layers will use a bias tensor or not.
+- `bias`: Bool or array of Bool. Whether the convolutional layers will use a bias tensor or not.
 
 - `activation`: None or class inheriting torch.nn.Module. One instance of this type will be 
 added after each convolutional layer. n.b. this needs to be a class object, NOT an instance
