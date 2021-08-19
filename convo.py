@@ -152,11 +152,12 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
     if not solved:
         raise RuntimeError("Was not able to find suitable parameters for given inputs!")
     
+    print(overall_dim_shapes)
     conv_layer_type = _get_conv_layer_type(n_dims)
     
     for n in range(n_layers):
         conv_args, conv_kwargs = _get_conv_args(overall_dim_shapes[n, 0], overall_dim_shapes[n+1, 0], conv_kernel_size[n],
-                                        conv_stride[n], conv_padding[n,:], dilation[n], bias[n], padding_mode)
+                                  conv_stride[n], conv_padding[n,:], dilation[n], bias[n], padding_mode)
         pool_args, pool_kwargs = _get_pool_args(pool_kernel_size[n, :], pool_stride[n, :], pool_padding[n, :])
         norm_args, norm_kwargs = _get_norm_args(overall_dim_shapes[n+1, 0])
         
@@ -181,7 +182,7 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
 
 def _get_modifier(n_layers, n_dims):
     
-    for depth in range(20):
+    for depth in range(n_layers * n_dims):
         g = _stripe_search_indices((n_layers-1)*n_dims, depth)
         for m in g:
             yield tensor(m).view(n_layers-1, n_dims)
@@ -283,7 +284,7 @@ def _get_layer_params(in_size, out_size, dilation, ks, st):
     else:
         kernel_low_bound = 1
     
-    for n in range(9):
+    for n in range(13):
         #print("solving")
         for conv_padding, conv_kernel, conv_stride, pool_padding, pool_kernel, pool_stride  in _double_stripe_indices(6, n):
             if ks != -1:
@@ -322,7 +323,6 @@ def _get_layer_params(in_size, out_size, dilation, ks, st):
             #print(conv_padding, conv_kernel + kernel_low_bound, conv_stride + stride_low_bound, pool_padding, pool_kernel + kernel_low_bound, pool_stride + stride_low_bound, "\n")
             
             if candidate_out_size == out_size:
-                #print("solved")
                 return conv_padding, conv_kernel + kernel_low_bound, conv_stride + stride_low_bound, pool_padding, pool_kernel + kernel_low_bound, pool_stride + stride_low_bound
             
             #print(8)
@@ -358,11 +358,13 @@ def _get_dim_sizes(in_size, out_size, n_layers):
     Return an approximately geometric series of n_layers+1 ints,
     starting with in_size and ending with out_size.
     """
+    # in * fac ** n = out,   log out/in = n log fac,   fac = (out/in) ^ 1/n
 
-    # in * fac ** n = out,   log out/in = n log fac
-    # OPTIMIZE ME
-    dim_factor = exp(log(out_size / in_size) / n_layers)
+    dim_factor = (out_size / in_size) ** (1 / n_layers)
     dim_sizes = [int(in_size * (dim_factor ** n)) for n in range(0, n_layers+1)]
+    dim_sizes = [s+(int(s<1)*(1-s)) for s in dim_sizes] # makes all sizes >= 1
+    dim_sizes[-1] = out_size
+    
     return dim_sizes
     
     
