@@ -9,7 +9,7 @@ convolutional sub-networks easy and quick!
 Give it the shapes and activations you want, it'll give you a network taking your `in_shape` to your `out_shape`
 in `n_layers` steps.
 
-The solver is currently a little rigid, and may fail for larger input sizes and numbers of layers.
+The solver is currently a little shaky, and may fail or be slow for larger input sizes and numbers of layers.
 
 ### Signature:
 ```python
@@ -109,6 +109,5 @@ class MyCNN(nn.Module):
 - Make proper docs.
 - Test, test, test...
 - Automate testing.
-- Add more norm layer type.
-- Add flexible solver by changing intermediate layer sizes.
+- Add more norm layer types.
 
