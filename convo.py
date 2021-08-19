@@ -152,7 +152,6 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
     if not solved:
         raise RuntimeError("Was not able to find suitable parameters for given inputs!")
     
-    print(overall_dim_shapes)
     conv_layer_type = _get_conv_layer_type(n_dims)
     
     for n in range(n_layers):
@@ -173,7 +172,7 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
         layers[f"pool_{n + 1}"] = pool_layer_type(*pool_args, **pool_kwargs)
         
         if norm_type[n] is not None:
-            layers[f"{norm_layer_type}_norm_{n + 1}"] = norm_layer_type(*norm_args, **norm_kwargs)
+            layers[f"{str(norm_layer_type).split('.')[1]}_norm_{n + 1}"] = norm_layer_type(*norm_args, **norm_kwargs)
     
     if module_list:
         return nn.ModuleList(layers.values())
@@ -188,7 +187,7 @@ def _get_modifier(n_layers, n_dims):
             yield tensor(m).view(n_layers-1, n_dims)
  
 def _get_norm_args(in_channels):
-    return (in_channels,), {}
+    return (int(in_channels),), {}
 
 def _get_pool_args(kernel, stride, padding):
     return (([int(k) for k in kernel],) ,
