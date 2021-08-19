@@ -14,6 +14,9 @@ from collections import OrderedDict
 from math import log, exp, ceil, floor
 import numpy as np
 
+class FailedToSolve(Exception):
+    pass
+
 class _LastUpdatedOrderedDict(OrderedDict):
     """Store items in the order the keys were last added"""
 
@@ -107,37 +110,55 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
     layers = _LastUpdatedOrderedDict()
     
     overall_dim_shapes = zeros((n_layers+1, n_dims+1))
-    for dim in range(n_dims + 1):
-        overall_dim_shapes[:, dim] = tensor(_get_dim_sizes(in_shape[dim], out_shape[dim], n_layers))
+    solved = False
+    # modifier for intermediate layer shapes in case solve fails
+    for modifier in _get_modifier(n_layers, n_dims):
+        #print(modifier)
+        try:
+            for dim in range(n_dims + 1):
+                overall_dim_shapes[:, dim] = tensor(_get_dim_sizes(in_shape[dim], out_shape[dim], n_layers))
     
-    ks = kernel_size
-    st = stride
-    
-    dim_shapes = np.repeat(overall_dim_shapes, 2, axis=0)
+            ks = kernel_size
+            st = stride
+            
+            #print("before", overall_dim_shapes)
+            overall_dim_shapes[1:-1,1:] += modifier
+            #print("after", overall_dim_shapes)
+            dim_shapes = np.repeat(overall_dim_shapes, 2, axis=0)
 
-    for odds in range(1, 2*n_layers + 1, 2):
-        dim_shapes[odds, 0] = dim_shapes[odds, 0]
+            for odds in range(1, 2*n_layers + 1, 2):
+                dim_shapes[odds, 0] = dim_shapes[odds, 0]
         
-    conv_padding = zeros((n_layers, n_dims))
-    conv_kernel_size = zeros((n_layers, n_dims))
-    conv_stride = zeros((n_layers, n_dims))
+            conv_padding = zeros((n_layers, n_dims))
+            conv_kernel_size = zeros((n_layers, n_dims))
+            conv_stride = zeros((n_layers, n_dims))
     
-    pool_padding = zeros((n_layers, n_dims))
-    pool_kernel_size = zeros((n_layers, n_dims))
-    pool_stride = zeros((n_layers, n_dims))
+            pool_padding = zeros((n_layers, n_dims))
+            pool_kernel_size = zeros((n_layers, n_dims))
+            pool_stride = zeros((n_layers, n_dims))
 
-    for n in range(n_layers):
-        for dim in range(n_dims):
-            conv_padding[n, dim], conv_kernel_size[n, dim], conv_stride[n, dim], \
-            pool_padding[n, dim], pool_kernel_size[n, dim], pool_stride[n, dim] = _get_layer_params(overall_dim_shapes[n, dim+1], overall_dim_shapes[n+1, dim+1], 0, ks[n, dim], st[n,dim])
-      
+            for n in range(n_layers):
+                for dim in range(n_dims):
+                    conv_padding[n, dim], conv_kernel_size[n, dim], conv_stride[n, dim], \
+                    pool_padding[n, dim], pool_kernel_size[n, dim], pool_stride[n, dim] = _get_layer_params(overall_dim_shapes[n, dim+1], overall_dim_shapes[n+1, dim+1], 0, ks[n, dim], st[n,dim])
+            
+            solved = True
+            #print(overall_dim_shapes)
+            break
+            
+        except FailedToSolve:
+            pass
+     
+    if not solved:
+        raise RuntimeError("Was not able to find suitable parameters for given inputs!")
+    
     conv_layer_type = _get_conv_layer_type(n_dims)
     
     for n in range(n_layers):
-        conv_args, conv_kwargs = _get_conv_args(dim_shapes[n+1, 0], dim_shapes[n+3, 0], conv_kernel_size[n],
+        conv_args, conv_kwargs = _get_conv_args(overall_dim_shapes[n, 0], overall_dim_shapes[n+1, 0], conv_kernel_size[n],
                                         conv_stride[n], conv_padding[n,:], dilation[n], bias[n], padding_mode)
         pool_args, pool_kwargs = _get_pool_args(pool_kernel_size[n, :], pool_stride[n, :], pool_padding[n, :])
-        norm_args, norm_kwargs = _get_norm_args(dim_shapes[n+3, 0])
+        norm_args, norm_kwargs = _get_norm_args(overall_dim_shapes[n+1, 0])
         
         pool_layer_type = _get_pool_layer_type(pool_type[n], n_dims)
         norm_layer_type = _get_norm_layer_type(norm_type[n], n_dims)
@@ -157,7 +178,14 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
         return nn.ModuleList(layers.values())
     
     return nn.Sequential(layers)
+
+def _get_modifier(n_layers, n_dims):
     
+    for depth in range(20):
+        g = _stripe_search_indices((n_layers-1)*n_dims, depth)
+        for m in g:
+            yield tensor(m).view(n_layers-1, n_dims)
+ 
 def _get_norm_args(in_channels):
     return (in_channels,), {}
 
@@ -232,8 +260,10 @@ def _double_stripe_indices(n_params, n_stripe):
     while 1:
         try:
             g1_last = next(g1)
+            #print(n_stripe, g1_last + g2_last)
             yield g1_last + g2_last
             g2_last = next(g2)
+            #print(n_stripe, g1_last + g2_last)
             yield g1_last + g2_last
             
         except StopIteration:
@@ -254,36 +284,50 @@ def _get_layer_params(in_size, out_size, dilation, ks, st):
         kernel_low_bound = 1
     
     for n in range(9):
+        #print("solving")
         for conv_padding, conv_kernel, conv_stride, pool_padding, pool_kernel, pool_stride  in _double_stripe_indices(6, n):
             if ks != -1:
+                #print(1)
                 conv_kernel, pool_kernel = ks - kernel_low_bound, ks - kernel_low_bound
             
             if st != -1:
+                #print(2)
                 conv_stride, pool_stride = st - stride_low_bound, st - stride_low_bound
             
             if conv_stride > conv_kernel + kernel_low_bound:
+                #print(3)
                 continue
             
             if pool_stride > pool_kernel + kernel_low_bound:
+                #print(4)
                 continue
                 
-            if pool_padding > pool_kernel // 2:
+            if 2 * pool_padding > pool_kernel + kernel_low_bound:
+                #print(5)
                 continue
                 
-            if in_size + (conv_padding * 2) > conv_kernel:
+            if in_size + (conv_padding * 2) < conv_kernel + kernel_low_bound:
+                #print(6)
                 continue
             
             inter_size = _conv_size_fcn(in_size, conv_padding, dilation, conv_kernel + kernel_low_bound, conv_stride + stride_low_bound)
             
-            if inter_size + (pool_padding * 2) > pool_kernel:
+            if inter_size + (pool_padding * 2) < pool_kernel:
+                #print(7)
                 continue
             
             candidate_out_size = _pool_size_fcn(inter_size, pool_padding, pool_kernel + kernel_low_bound, pool_stride + stride_low_bound)
             
+            #print(candidate_out_size, out_size)
+            #print(conv_padding, conv_kernel + kernel_low_bound, conv_stride + stride_low_bound, pool_padding, pool_kernel + kernel_low_bound, pool_stride + stride_low_bound, "\n")
+            
             if candidate_out_size == out_size:
+                #print("solved")
                 return conv_padding, conv_kernel + kernel_low_bound, conv_stride + stride_low_bound, pool_padding, pool_kernel + kernel_low_bound, pool_stride + stride_low_bound
-    
-    raise RuntimeError("Was not able to find suitable parameters for given inputs!")
+            
+            #print(8)
+            
+    raise FailedToSolve("Was not able to find suitable parameters for given inputs!")
     
 def _get_conv_layer_type(n_dims):
     """ Returns the type of an n_dims-dimensioinal convolution layer. """
