@@ -109,5 +109,5 @@ class MyCNN(nn.Module):
 - Make proper docs.
 - Test, test, test...
 - Automate testing.
-- Add more norm layer type.
+- Add more norm layer types.
 
