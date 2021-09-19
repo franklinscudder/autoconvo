@@ -104,8 +104,13 @@ class MyCNN(nn.Module):
 		output = self.activation(self.full_conn(flat))
 ```
 
-## TODO:
+### Tips and Tricks
 
+- The argument `activation` can be any `nn.Module` subtype and therefore can be an `nn.Sequential` of several layers, so long as these layers do not change the shape of the
+tensor passed to `forward` as this will mess up the shape solver (in its current state at least :) ).
+
+## TODO:
+- Add a caching system.
 - Make proper docs.
 - Test, test, test...
 - Automate testing.
