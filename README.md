@@ -15,10 +15,10 @@ The solver is currently a little shaky, and may fail or be slow for larger input
 ```python
 convo.make_convolutions(
 		    in_shape, out_shape, n_layers, kernel_size=None, stride=None,
-            padding_mode="zeros", dilation=1, bias=True, 
-            activation=nn.ReLU, pool_type="max", norm_type=None, 
+            	    padding_mode="zeros", dilation=1, bias=True, 
+            	    activation=nn.ReLU, pool_type="max", norm_type=None, 
 		    module_list=False, cache=True
-			) -> torch.nn.Sequential or torch.nn.ModuleList
+		    ) -> torch.nn.Sequential or torch.nn.ModuleList
 ```
 
 ### Args:
