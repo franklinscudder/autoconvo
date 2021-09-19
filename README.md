@@ -14,10 +14,11 @@ The solver is currently a little shaky, and may fail or be slow for larger input
 ### Signature:
 ```python
 convo.make_convolutions(
-		   in_shape, out_shape, n_layers, kernel_size=None, stride=None,
-                   padding_mode="zeros", dilation=1, bias=True, 
-                   activation=nn.ReLU, pool_type="max", norm_type=None, module_list=False
-		  ) -> torch.nn.Sequential or torch.nn.ModuleList
+		    in_shape, out_shape, n_layers, kernel_size=None, stride=None,
+            padding_mode="zeros", dilation=1, bias=True, 
+            activation=nn.ReLU, pool_type="max", norm_type=None, 
+		    module_list=False, cache=True
+			) -> torch.nn.Sequential or torch.nn.ModuleList
 ```
 
 ### Args:
@@ -61,6 +62,9 @@ each pooling layer. In the future other norm types will be implemented.
 
 - `module_list`: Bool. Whether the returned object will be an instance of `torch.nn.Sequential`
 or `torch.nn.ModuleList`.
+
+- `cache`: Bool. Whether or not to use the caching system to check whether a solution has already
+been generated for the given parameters.
 
 ### Returns:
 
@@ -110,7 +114,6 @@ class MyCNN(nn.Module):
 tensor passed to `forward` as this will mess up the shape solver (in its current state at least :) ).
 
 ## TODO:
-- Add a caching system.
 - Make proper docs.
 - Test, test, test...
 - Automate testing.

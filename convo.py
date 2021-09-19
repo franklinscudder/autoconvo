@@ -6,13 +6,35 @@ A package to automatically set up simple convolutional neural networks in pytorc
 Thomas Findlay, 08/2021
 
 findlaytel@gmail.com
+github.com/franklinscudder/pytorch-convo
 """
 
 import torch.nn as nn
-from torch import tensor, zeros
+from torch import tensor, zeros, save, load
 from collections import OrderedDict
 from math import log, exp, ceil, floor
 import numpy as np
+from hashlib import sha1
+from pathlib import Path
+
+def _make_cache_hash(args):
+    """ Make a hex hash from the dict of args. """
+    m = sha1()
+    m.update(bytes(str(args), "utf-8"))
+    return m.hexdigest()[:16]
+    
+def _check_cache(arg_hash):
+    """ Check whether a cache file exists for the given arg_hash. """
+    path = Path(f"./{arg_hash}.pt")
+    return path.is_file()
+    
+def _make_cache(layers, arg_hash):
+    """ Cache the generated solution for future use. """
+    save(layers, Path(f"./{arg_hash}.pt"))
+    
+def _load_cache(arg_hash):
+    """ Load a cached solution. """
+    return load(Path(f"./{arg_hash}.pt"))
 
 class FailedToSolve(Exception):
     pass
@@ -27,7 +49,8 @@ class _LastUpdatedOrderedDict(OrderedDict):
 
 def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=None,
                         padding_mode="zeros", dilation=1, bias=True, 
-                        activation=nn.ReLU, pool_type="max", norm_type=None, module_list=False):
+                        activation=nn.ReLU, pool_type="max", norm_type=None, 
+                        module_list=False, cache=True):
     """Return a convolutional subnetwork configured according to the given args.
 
     Parameters
@@ -87,8 +110,17 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
         If the value of certain arguments are not in the correct range or shape.
 
     """
-
+    
     _check_shapes(in_shape, out_shape)
+    
+    if cache:
+        args = locals()
+        arg_hash = _make_cache_hash(args)
+        is_cached = _check_cache(arg_hash)
+    
+        if is_cached:
+            print(f"Convo: Using cached solution with ID {arg_hash}.")
+            return _load_cache(arg_hash)
     
     n_dims = len(in_shape) - 1 # SPATIAL dims
     
@@ -175,9 +207,14 @@ def make_convolutions(in_shape, out_shape, n_layers, kernel_size=None, stride=No
             layers[f"{str(norm_layer_type).split('.')[1]}_norm_{n + 1}"] = norm_layer_type(*norm_args, **norm_kwargs)
     
     if module_list:
-        return nn.ModuleList(layers.values())
+        output = nn.ModuleList(layers.values())
+    else:
+        output = nn.Sequential(layers)
     
-    return nn.Sequential(layers)
+    if cache:
+        _make_cache(output, arg_hash)
+    
+    return output
 
 def _get_modifier(n_layers, n_dims):
     
