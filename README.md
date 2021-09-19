@@ -1,6 +1,10 @@
 # pytorch-convo
  A package to automatically set up simple convolutional neural networks in pytorch.
  
+[![Downloads](https://pepy.tech/badge/qutiepy)](https://pepy.tech/project/pytorch-convo)
+[![PyPi license](https://badgen.net/pypi/license/pip/)](https://pypi.com/pytorch-convoy/pip/)
+[![PyPi version](https://badgen.net/pypi/v/qutiepy/)](https://pypi.com/project/pytorch-convo)
+ 
 ## `convo.make_convolutions()`
 
 This is the only function exported by this one-module package, intended to make designing 'quick and dirty'
