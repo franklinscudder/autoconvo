@@ -1,8 +1,8 @@
-# pytorch-convo
+# autoconvo
  A package to automatically set up simple convolutional neural networks in pytorch.
  
-[![Downloads](https://pepy.tech/badge/pytorch-convo)](https://pepy.tech/project/pytorch-convo)
-[![PyPi version](https://badgen.net/pypi/v/pytorch-convo/)](https://pypi.com/project/pytorch-convo)
+[![Downloads](https://pepy.tech/badge/autoconvo))](https://pepy.tech/project/autoconvo)
+[![PyPi version](https://badgen.net/pypi/v/autoconvo))](https://pypi.com/project/autoconvo)
  
 ## `convo.make_convolutions()`
 
@@ -76,23 +76,24 @@ taking an input of shape `(batch_size, *in_shape)` and returning a result of sha
 These layers are contained in a `torch.nn.Sequential` object or a `torch.nn.ModuleList` if specified by the
 `module_list` argument.
 
-## Using convo
+## Using autoconvo
 
-Currently, convo is in the testing phase and has been released in alpha on PyPI. You will find bugs so please make PRs or post issues
+Currently, autoconvo is in the testing phase but has been released in alpha on PyPI. You will find bugs so please make PRs or post issues
 here so I can get them squashed.
 
 *Also check out my other baby, QutiePy - a python quantum computing library.*
 
-### Installing pytorch-convo
+### Installing autoconvo
 
 The package can be installed with `pip`:
 ```
-pip install pytorch-convo
+pip install autoconvo
 ```
 and imported with:
 ```python
-from convo import make_convolutions
+from autoconvo.convo import make_convolutions
 ```
+or similar.
 
 ### Example
 
@@ -103,7 +104,7 @@ just `print` the resulting `nn.Sequential` or `nn.ModuleList` for a nice represe
 ```python
 import torch.nn as nn
 from torch import flatten
-import convo
+from autoconvo import convo
 
 class MyCNN(nn.Module):
 	def __init__(self):
