@@ -1,8 +1,8 @@
 # autoconvo
  A package to automatically set up simple convolutional neural networks in pytorch.
  
-[![Downloads](https://pepy.tech/badge/autoconvo))](https://pepy.tech/project/autoconvo)
-[![PyPi version](https://badgen.net/pypi/v/autoconvo))](https://pypi.com/project/autoconvo)
+[![Downloads](https://pepy.tech/badge/autoconvo)](https://pepy.tech/project/autoconvo)
+[![PyPi version](https://badgen.net/pypi/v/autoconvo)](https://pypi.com/project/autoconvo)
  
 ## `convo.make_convolutions()`
 
